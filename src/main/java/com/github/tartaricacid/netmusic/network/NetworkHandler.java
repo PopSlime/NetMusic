@@ -35,11 +35,15 @@ public class NetworkHandler {
     }
 
     public static void sendToNearby(Level world, BlockPos pos, Object toSend) {
+        sendToNearby(world, pos, 96, toSend);
+    }
+
+    public static void sendToNearby(Level world, BlockPos pos, double maxDistance, Object toSend) {
         if (world instanceof ServerLevel) {
             ServerLevel ws = (ServerLevel) world;
 
             ws.getChunkSource().chunkMap.getPlayers(new ChunkPos(pos), false).stream()
-                    .filter(p -> p.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < 96 * 96)
+                    .filter(p -> p.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < maxDistance * maxDistance)
                     .forEach(p -> CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), toSend));
         }
     }

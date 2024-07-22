@@ -31,6 +31,10 @@ public class MusicToClientMessage {
         this.volume = volume;
     }
 
+    public float getVolume() {
+        return volume;
+    }
+
     public static MusicToClientMessage decode(FriendlyByteBuf buf) {
         return new MusicToClientMessage(BlockPos.of(buf.readLong()), buf.readUtf(), buf.readInt(), buf.readUtf(), buf.readFloat());
     }
