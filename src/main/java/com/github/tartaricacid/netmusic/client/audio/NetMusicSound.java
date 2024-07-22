@@ -27,13 +27,17 @@ public class NetMusicSound extends AbstractTickableSoundInstance {
     private int tick;
 
     public NetMusicSound(BlockPos pos, URL songUrl, int timeSecond) {
+        this(pos, songUrl, timeSecond, 4.0f);
+    }
+
+    public NetMusicSound(BlockPos pos, URL songUrl, int timeSecond, float volume) {
         super(InitSounds.NET_MUSIC.get(), SoundSource.RECORDS, SoundInstance.createUnseededRandom());
         this.songUrl = songUrl;
         this.x = pos.getX() + 0.5f;
         this.y = pos.getY() + 0.5f;
         this.z = pos.getZ() + 0.5f;
         this.tickTimes = timeSecond * 20;
-        this.volume = 4.0f;
+        this.volume = volume;
         this.tick = 0;
         this.pos = pos;
     }

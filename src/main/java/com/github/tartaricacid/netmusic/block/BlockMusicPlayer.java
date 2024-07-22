@@ -84,32 +84,33 @@ public class BlockMusicPlayer extends HorizontalDirectionalBlock implements Enti
 
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos blockPos, Block block, BlockPos fromPos, boolean isMoving) {
-        playerMusic(level, blockPos, level.hasNeighborSignal(blockPos));
+        playerMusic(level, blockPos, level.getBestNeighborSignal(blockPos));
     }
 
-    private static void playerMusic(Level level, BlockPos blockPos, boolean signal) {
+    private static void playerMusic(Level level, BlockPos blockPos, int signal) {
         BlockEntity blockEntity = level.getBlockEntity(blockPos);
         if (blockEntity instanceof TileEntityMusicPlayer player) {
-            if (signal != player.hasSignal()) {
-                if (signal) {
+            boolean hasSignal = signal != 0;
+            if (hasSignal != player.hasSignal()) {
+                if (hasSignal) {
                     if (player.isPlay()) {
                         player.setPlay(false);
-                        player.setSignal(signal);
+                        player.setSignal(true);
                         player.markDirty();
                         return;
                     }
                     ItemStack stackInSlot = player.getPlayerInv().getStackInSlot(0);
                     if (stackInSlot.isEmpty()) {
-                        player.setSignal(signal);
+                        player.setSignal(true);
                         player.markDirty();
                         return;
                     }
                     ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(stackInSlot);
                     if (songInfo != null) {
-                        player.setPlayToClient(songInfo);
+                        player.setPlayToClient(songInfo, signal);
                     }
                 }
-                player.setSignal(signal);
+                player.setSignal(hasSignal);
                 player.markDirty();
             }
         }

@@ -2,7 +2,6 @@ package com.github.tartaricacid.netmusic.tileentity;
 
 import com.github.tartaricacid.netmusic.block.BlockMusicPlayer;
 import com.github.tartaricacid.netmusic.init.InitBlocks;
-import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.inventory.MusicPlayerInv;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
@@ -13,25 +12,18 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class TileEntityMusicPlayer extends BlockEntity {
@@ -46,8 +38,12 @@ public class TileEntityMusicPlayer extends BlockEntity {
     private int currentTime;
     private boolean hasSignal = false;
 
+    protected TileEntityMusicPlayer(BlockEntityType<?> type, BlockPos blockPos, BlockState blockState) {
+        super(type, blockPos, blockState);
+    }
+
     public TileEntityMusicPlayer(BlockPos blockPos, BlockState blockState) {
-        super(TYPE, blockPos, blockState);
+        this(TYPE, blockPos, blockState);
     }
 
     @Override
@@ -121,12 +117,21 @@ public class TileEntityMusicPlayer extends BlockEntity {
     }
 
     public void setPlayToClient(ItemMusicCD.SongInfo info) {
+        setPlayToClient(info, 15);
+    }
+
+    public void setPlayToClient(ItemMusicCD.SongInfo info, int signal) {
         this.setCurrentTime(info.songTime * 20 + 64);
         this.isPlay = true;
         if (level != null && !level.isClientSide) {
-            MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName);
+            MusicToClientMessage msg = createMusicToClientMessage(info, signal);
             NetworkHandler.sendToNearby(level, worldPosition, msg);
         }
+    }
+
+    @NotNull
+    protected MusicToClientMessage createMusicToClientMessage(ItemMusicCD.SongInfo info, int signal) {
+        return new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName);
     }
 
     public void markDirty() {
