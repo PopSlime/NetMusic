@@ -1,4 +1,5 @@
 {
+  "block.netmusic.amplified_music_player": "功放唱片机",
   "block.netmusic.cd_burner": "唱片刻录机",
   "block.netmusic.cd_burner.desc": "只可以写入网易云音乐链接（仅可在中国大陆可用）",
   "block.netmusic.computer": "电脑",
