@@ -3,6 +3,7 @@ package com.github.tartaricacid.netmusic.init;
 import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.client.config.MusicListManage;
 import com.github.tartaricacid.netmusic.compat.tlm.init.CompatRegistry;
+import com.github.tartaricacid.netmusic.item.ItemAmplifiedMusicPlayer;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.item.ItemMusicPlayer;
 import net.minecraft.core.registries.Registries;
@@ -21,6 +22,7 @@ public class InitItems {
 
     public static RegistryObject<Item> MUSIC_CD = ITEMS.register("music_cd", ItemMusicCD::new);
     public static RegistryObject<Item> MUSIC_PLAYER = ITEMS.register("music_player", ItemMusicPlayer::new);
+    public static RegistryObject<Item> AMPLIFIED_MUSIC_PLAYER = ITEMS.register("amplified_music_player", ItemAmplifiedMusicPlayer::new);
     public static RegistryObject<Item> CD_BURNER = ITEMS.register("cd_burner", () -> new BlockItem(InitBlocks.CD_BURNER.get(), new Item.Properties().stacksTo(1)));
     public static RegistryObject<Item> COMPUTER = ITEMS.register("computer", () -> new BlockItem(InitBlocks.COMPUTER.get(), new Item.Properties().stacksTo(1)));
     public static RegistryObject<Item> MUSIC_PLAYER_BACKPACK = ITEMS.register("music_player_backpack", () -> new Item(new Item.Properties().stacksTo(1)));
@@ -28,6 +30,7 @@ public class InitItems {
     public static RegistryObject<CreativeModeTab> NET_MUSIC_TAB = TABS.register("netmusic", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.netmusic"))
             .icon(() -> new ItemStack(InitBlocks.MUSIC_PLAYER.get())).displayItems((parameters, output) -> {
                         output.accept(new ItemStack(MUSIC_PLAYER.get()));
+                        output.accept(new ItemStack(AMPLIFIED_MUSIC_PLAYER.get()));
                         output.accept(new ItemStack(InitItems.CD_BURNER.get()));
                         output.accept(new ItemStack(InitItems.COMPUTER.get()));
                         CompatRegistry.initCreativeModeTab(output);
