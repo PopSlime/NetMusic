@@ -36,6 +36,7 @@ public class TileEntityMusicPlayer extends BlockEntity {
     private final ItemStackHandler playerInv = new MusicPlayerInv(this);
     private LazyOptional<IItemHandler> playerInvHandler;
     private int currentTime;
+    private boolean initialTick;
 
     protected TileEntityMusicPlayer(BlockEntityType<?> type, BlockPos blockPos, BlockState blockState) {
         super(type, blockPos, blockState);
@@ -57,10 +58,14 @@ public class TileEntityMusicPlayer extends BlockEntity {
         super.load(nbt);
         CompoundTag data = getPersistentData();
         playerInv.deserializeNBT(data.getCompound(CD_ITEM_TAG));
-        setHasRecord(!playerInv.getStackInSlot(0).isEmpty());
         currentTime = data.getInt(CURRENT_TIME_TAG);
+    }
 
-        // Compatibility
+    private void lateInit() {
+        setHasRecord(!playerInv.getStackInSlot(0).isEmpty());
+
+        // Compatibility: Migrate NBTs to block states
+        CompoundTag data = getPersistentData();
         if (data.contains(IS_PLAY_TAG)) {
             setPlay(data.getBoolean(IS_PLAY_TAG));
             data.remove(IS_PLAY_TAG);
@@ -186,7 +191,7 @@ public class TileEntityMusicPlayer extends BlockEntity {
         return null;
     }
 
-    public <T extends Comparable<T>,V extends T> void setState(Property<T> property, V value) {
+    public <T extends Comparable<T>, V extends T> void setState(Property<T> property, V value) {
         BlockState state = this.getBlockState();
         if (state.getBlock() instanceof BlockMusicPlayer && level != null) {
             level.setBlock(worldPosition, state.setValue(property, value), Block.UPDATE_ALL);
@@ -196,6 +201,10 @@ public class TileEntityMusicPlayer extends BlockEntity {
     public void tickTime() {
         if (currentTime > 0) {
             currentTime--;
+        }
+        if (!initialTick) {
+            lateInit();
+            initialTick = true;
         }
     }
 
