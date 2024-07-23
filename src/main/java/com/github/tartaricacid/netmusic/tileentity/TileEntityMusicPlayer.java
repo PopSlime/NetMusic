@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -34,9 +35,7 @@ public class TileEntityMusicPlayer extends BlockEntity {
     private static final String SIGNAL_TAG = "RedStoneSignal";
     private final ItemStackHandler playerInv = new MusicPlayerInv(this);
     private LazyOptional<IItemHandler> playerInvHandler;
-    private boolean isPlay = false;
     private int currentTime;
-    private boolean hasSignal = false;
 
     protected TileEntityMusicPlayer(BlockEntityType<?> type, BlockPos blockPos, BlockState blockState) {
         super(type, blockPos, blockState);
@@ -49,19 +48,27 @@ public class TileEntityMusicPlayer extends BlockEntity {
     @Override
     public void saveAdditional(CompoundTag compound) {
         getPersistentData().put(CD_ITEM_TAG, playerInv.serializeNBT());
-        getPersistentData().putBoolean(IS_PLAY_TAG, isPlay);
         getPersistentData().putInt(CURRENT_TIME_TAG, currentTime);
-        getPersistentData().putBoolean(SIGNAL_TAG, hasSignal);
         super.saveAdditional(compound);
     }
 
     @Override
     public void load(CompoundTag nbt) {
         super.load(nbt);
-        playerInv.deserializeNBT(getPersistentData().getCompound(CD_ITEM_TAG));
-        isPlay = getPersistentData().getBoolean(IS_PLAY_TAG);
-        currentTime = getPersistentData().getInt(CURRENT_TIME_TAG);
-        hasSignal = getPersistentData().getBoolean(SIGNAL_TAG);
+        CompoundTag data = getPersistentData();
+        playerInv.deserializeNBT(data.getCompound(CD_ITEM_TAG));
+        setHasRecord(!playerInv.getStackInSlot(0).isEmpty());
+        currentTime = data.getInt(CURRENT_TIME_TAG);
+
+        // Compatibility
+        if (data.contains(IS_PLAY_TAG)) {
+            setPlay(data.getBoolean(IS_PLAY_TAG));
+            data.remove(IS_PLAY_TAG);
+        }
+        if (data.contains(SIGNAL_TAG)) {
+            setSignal(data.getBoolean(SIGNAL_TAG));
+            data.remove(SIGNAL_TAG);
+        }
     }
 
     @Override
@@ -108,21 +115,13 @@ public class TileEntityMusicPlayer extends BlockEntity {
         return null;
     }
 
-    public boolean isPlay() {
-        return isPlay;
-    }
-
-    public void setPlay(boolean play) {
-        isPlay = play;
-    }
-
     public void setPlayToClient(ItemMusicCD.SongInfo info) {
         setPlayToClient(info, 15);
     }
 
     public void setPlayToClient(ItemMusicCD.SongInfo info, int signal) {
         this.setCurrentTime(info.songTime * 20 + 64);
-        this.isPlay = true;
+        setPlay(true);
         if (level != null && !level.isClientSide) {
             MusicToClientMessage msg = createMusicToClientMessage(info, signal);
             NetworkHandler.sendToNearby(level, worldPosition, msg.getVolume() * 16 + 32, msg);
@@ -159,12 +158,39 @@ public class TileEntityMusicPlayer extends BlockEntity {
         return currentTime;
     }
 
+    public void setHasRecord(boolean hasRecord) {
+        setState(BlockMusicPlayer.HAS_RECORD, hasRecord);
+    }
+
+    public boolean isPlay() {
+        return getState(BlockMusicPlayer.ENABLED);
+    }
+
+    public void setPlay(boolean play) {
+        setState(BlockMusicPlayer.ENABLED, play);
+    }
+
     public boolean hasSignal() {
-        return hasSignal;
+        return getState(BlockMusicPlayer.POWERED);
     }
 
     public void setSignal(boolean signal) {
-        this.hasSignal = signal;
+        setState(BlockMusicPlayer.POWERED, signal);
+    }
+
+    public <T extends Comparable<T>> T getState(Property<T> property) {
+        BlockState state = this.getBlockState();
+        if (state.getBlock() instanceof BlockMusicPlayer && level != null) {
+            return state.getValue(property);
+        }
+        return null;
+    }
+
+    public <T extends Comparable<T>,V extends T> void setState(Property<T> property, V value) {
+        BlockState state = this.getBlockState();
+        if (state.getBlock() instanceof BlockMusicPlayer && level != null) {
+            level.setBlock(worldPosition, state.setValue(property, value), Block.UPDATE_ALL);
+        }
     }
 
     public void tickTime() {

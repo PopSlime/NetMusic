@@ -24,6 +24,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -40,9 +42,18 @@ import java.util.function.Consumer;
 public class BlockMusicPlayer extends HorizontalDirectionalBlock implements EntityBlock {
     protected static final VoxelShape BLOCK_AABB = Block.box(2, 0, 2, 14, 6, 14);
 
+    public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
+    public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
+    public static final BooleanProperty ENABLED = BlockStateProperties.ENABLED;
+
     public BlockMusicPlayer() {
         super(BlockBehaviour.Properties.of().sound(SoundType.WOOD).strength(0.5f).noOcclusion());
-        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.SOUTH));
+        this.registerDefaultState(this.stateDefinition.any()
+                .setValue(FACING, Direction.SOUTH)
+                .setValue(HAS_RECORD, false)
+                .setValue(POWERED, false)
+                .setValue(ENABLED, false)
+        );
     }
 
     @Nullable
@@ -54,6 +65,9 @@ public class BlockMusicPlayer extends HorizontalDirectionalBlock implements Enti
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
+        builder.add(HAS_RECORD);
+        builder.add(POWERED);
+        builder.add(ENABLED);
     }
 
     @Nullable
@@ -158,6 +172,9 @@ public class BlockMusicPlayer extends HorizontalDirectionalBlock implements Enti
 
     @Override
     public void onRemove(BlockState state, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (state.is(newState.getBlock())) {
+            return;
+        }
         BlockEntity te = worldIn.getBlockEntity(pos);
         if (te instanceof TileEntityMusicPlayer) {
             TileEntityMusicPlayer musicPlayer = (TileEntityMusicPlayer) te;
